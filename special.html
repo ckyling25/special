@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你適合特殊選才嗎？- 特殊選才適配度模擬測驗</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background-color: #fdfbf6; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 模糊背景 */
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            /* 重要：確認這裡的檔名與你下載的圖片檔名一致 */
+            background-image: url('image_1.png'); 
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            filter: blur(5px); opacity: 0.5; z-index: -1;
+        }
+
+        /* 白色容器 (增加下方的 padding 給警語底欄) */
+        .main-container {
+            background-color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-radius: 1.5rem;
+            width: 95%; max-width: 42rem;
+            margin: 1rem;
+            display: flex; flex-direction: column;
+            overflow: hidden; /* 重要：切齊底欄圓角 */
+            min-height: 520px;
+        }
+
+        /* 內容區域 (除了底欄以外的部分) */
+        .content-area {
+            padding: 2.5rem 2rem 1.5rem 2rem; /* 底部縮小 gap */
+            flex-grow: 1;
+        }
+
+        /* [新增] 警語底欄樣式 (參考附圖樣式) */
+        .disclaimer-bar {
+            background-color: #f8fafc; /* 超淺灰藍 */
+            border-top: 1px solid #e2e8f0;
+            padding: 0.75rem 2rem;
+            text-align: center;
+        }
+        .disclaimer-text {
+            color: #64748b; /* 中灰色 */
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1.5;
+        }
+
+        /* 選項與進度條樣式 */
+        .option-box {
+            border: 2px solid #e2e8f0; padding: 1rem; margin-bottom: 0.75rem;
+            cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; background-color: white;
+        }
+        .option-box:hover { border-color: #6366f1; background-color: #f5f3ff; }
+        .option-box.selected { border-color: #4f46e5; background-color: #e0e7ff; font-weight: bold; }
+        .progress-bar { height: 10px; background-color: #e2e8f0; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background-color: #4f46e5; transition: width 0.3s ease; }
+        .hidden { display: none; }
+
+        /* [新增] 圓形進度條 CSS 繪圖核心與動畫 */
+        .circular-progress-container {
+            position: relative; width: 180px; height: 180px; margin: 0 auto;
+        }
+        .circular-progress {
+            width: 100%; height: 100%; border-radius: 50%;
+            /* 底色圈 (深灰色) */
+            background: radial-gradient(closest-side, white 82%, transparent 82% 100%),
+                        conic-gradient(#334155 0%, #334155 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* 內部內容 (數字與文字) */
+        .circular-content {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        /* [JS 動畫控制屬性] 透過 CSS 變數控制填滿比例 */
+        .circular-progress::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%;
+            /* 動態圈 (靛藍色)，初始為 0% */
+            background: radial-gradient(closest-side, white 82%, transparent 82% 100%),
+                        conic-gradient(#4f46e5 calc(var(--progress-val) * 1%), #e2e8f0 calc(var(--progress-val) * 1%));
+        }
+
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+    <div class="main-container shadow-2xl">
+        
+        <div class="content-area">
+            
+            <div id="start-screen" class="text-center">
+                <h1 class="text-indigo-900 mb-2 font-bold">
+                    <span class="text-3xl md:text-5xl block mb-3">你適合特殊選才嗎?</span>
+                    <span class="text-xl md:text-2xl block opacity-70 font-normal">特殊選才適配度模擬測驗</span>
+                </h1>
+                <p class="text-gray-600 mt-8 mb-12 max-w-2xl mx-auto leading-9 text-lg">
+                    相較於繁星、個人申請及分科測驗，特殊選才不看學測成績，<br>
+                    專為具有「偏才、奇才、逆境向上」特質學生所設計的特殊管道。<br>
+                    透過本模擬器，評估你目前的狀態是否適合嘗試這項入學管道。
+                </p>
+                <button onclick="startQuiz()" class="w-full max-w-sm bg-indigo-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-indigo-700 transform hover:scale-105 transition-all shadow-lg mx-auto block">
+                    開始測驗
+                </button>
+            </div>
+
+            <div id="quiz-container" class="hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-3">
+                        <span id="step-indicator" class="text-sm font-bold text-indigo-600 uppercase tracking-wider">步驟 1 / 10</span>
+                        <span id="percent-indicator" class="text-sm font-medium text-gray-400">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 10%;"></div>
+                    </div>
+                </div>
+                <div id="question-area"></div>
+                <div class="mt-10 flex justify-between gap-4">
+                    <button id="prev-btn" onclick="goBack()" class="px-8 py-3 border-2 border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-all hidden font-bold">回上一題</button>
+                    <button id="next-btn" onclick="goNext()" class="px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 ml-auto transition-all shadow-md font-bold">下一題</button>
+                </div>
+            </div>
+
+            <div id="result-screen" class="hidden text-center">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">測驗結果分析</h2>
+                
+                <div class="circular-progress-container mb-10">
+                    <div id="result-circular" class="circular-progress" style="--progress-val: 0;">
+                        <div class="circular-content z-10"> <span id="final-score-text" class="text-6xl font-black text-indigo-950 font-Noto- TC" style="font-family:'Noto Sans TC', sans-serif">0%</span>
+                            <span class="text-sm font-bold text-slate-500 mt-1 uppercase rounded-full px-3 py-1 bg-slate-100">適配度分數</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="result-description" class="p-8 bg-white border-2 border-indigo-50 rounded-2xl text-left text-gray-700 leading-relaxed shadow-sm text-lg"></div>
+                <button onclick="location.reload()" class="mt-10 w-full max-w-sm border-2 border-indigo-600 text-indigo-600 py-4 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all mx-auto block">
+                    重新測驗
+                </button>
+            </div>
+
+        </div>
+        <div class="disclaimer-bar">
+            <p class="disclaimer-text">
+                ⚠️ 備註說明：本測驗結果僅供個人參考與娛樂用途，建議詳閱各校系簡章並諮詢專業老師。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // JS 題目邏輯保持不變 ...
+        const quizData = [
+            { id: 'identity_main', question: "1. 請問你目前的身份類別？", options: [ { text: "體制內學生 (國中/高中職)", value: 'normal', next: 'identity_sub' }, { text: "體制外學生 (境外生/實驗教育/自學)", value: 'special', score: 15 } ] },
+            { id: 'identity_sub', question: "1-1. 請問你目前的就學階段？", options: [ { text: "高中以下", value: 'junior', score: 2 }, { text: "高一", value: 'f1', score: 5 }, { text: "高二", value: 'f2', score: 8 }, { text: "高三", value: 'f3', score: 10 } ] },
+            { id: 'academic_rank', question: "2. 你的在校成績百分比 (前 % 數) 大約落在？", options: [ { text: "前 1% ~ 10%", value: 'top', score: 8 }, { text: "11% ~ 30%", value: 'mid-high', score: 5 }, { text: "31% ~ 50%", value: 'mid', score: 3 }, { text: "50% 之後", value: 'low', score: 1 }, { text: "不適用 (如非學校型態實驗教育)", value: 'na', score: 10 } ] },
+            { id: 'subject_bias', question: "3. 哪些學科是你的「強項」或「偏才領域」？", type: 'multiple', options: [ { text: "國文", value: 'chi', score: 5 }, { text: "英文", value: 'eng', score: 5 }, { text: "數學", value: 'math', score: 5 }, { text: "生物", value: 'bio', score: 5 }, { text: "物理", value: 'phy', score: 5 }, { text: "化學", value: 'chem', score: 5 }, { text: "地科", value: 'geo_sci', score: 5 }, { text: "地理", value: 'geo', score: 5 }, { text: "歷史", value: 'his', score: 5 }, { text: "公民", value: 'civ', score: 5 }, { text: "以上皆無明顯偏才 (平均發展)", value: 'none', score: 2 } ] },
+            { id: 'special_talent', question: "4. 你是否具備以下特殊的「專長」？", options: [ { text: "具備藝術、體育或特殊領域傑出表現", value: 'art', score: 15 }, { text: "對特定冷門領域有超乎常人的熱愛與鑽研", value: 'passion', score: 15 }, { text: "具備豐富實務經驗 (如提早創業、長期接案工作)", value: 'practice', score: 18 }, { text: "目前尚未發現明顯的特殊專長", value: 'none', score: 0 } ] },
+            { id: 'experience', question: "5. 你是否擁有以下「過人經歷」？(可複選，此題分數累加)", type: 'multiple', options: [ { text: "學科奧林匹亞競賽 (入選選訓營或獲獎)", value: 'olympiad', score: 20 }, { text: "長期深度志工服務或社會公共議題實踐", value: 'volunteer', score: 8 }, { text: "具備小論文寫作、全國性競賽獲獎經歷", value: 'award', score: 10 }, { text: "具備高階語言證照 (如托福/雅思高分) 或 APCS 證照", value: 'cert', score: 12 }, { text: "以上皆無明顯突出經歷", value: 'none', score: 0 } ] },
+            { id: 'scenario_1', question: "6. 情境題一：當你在研究一個感興趣的題目卻遇到瓶頸時，你通常會？", options: [ { text: "自行查閱國內外文獻，直到弄懂為止", value: 'a', score: 5 }, { text: "先放著，等學校老師教到相關章節再說", value: 'b', score: 1 }, { text: "尋找同好或在社群發問，試圖整合資源解決", value: 'c', score: 4 } ] },
+            { id: 'scenario_2', question: "7. 情境題二：面對學校規定規定例行作業，你的看法是？", options: [ { text: "準時交差，把時間留給自己想做的研究", value: 'a', score: 5 }, { text: "完美主義，每一科都要做到最好", value: 'b', score: 2 }, { text: "經常覺得無趣，更喜歡自己設定學習進度", value: 'c', score: 4 } ] },
+            { id: 'scenario_3', question: "8. 情境題三：如果你發現一個很有趣的競賽，但沒人想參加，你會？", options: [ { text: "就算只有一個人，也會想辦法完成並參賽", value: 'a', score: 5 }, { text: "如果老師沒要求，就不會特別去參加", value: 'b', score: 1 }, { text: "主動去說服不同專長的朋友跨界組隊", value: 'c', score: 5 } ] },
+            { id: 'scenario_4', question: "9. 情境題四：對於「失敗」或「落榜」，你的心態通常是？", options: [ { text: "分析失敗原因，並認為過程累積的經驗更有價值", value: 'a', score: 5 }, { text: "會難過很久，覺得自己不如別人", value: 'b', score: 1 }, { text: "無所謂，反正人生本來就有許多嘗試", value: 'c', score: 3 } ] },
+            { id: 'scenario_5', question: "10. 情境題五：你的學習動力主要來自於？", options: [ { text: "內心的好奇心與對某個領域的狂熱", value: 'a', score: 5 }, { text: "家長的期待或對未來找工作的擔憂", value: 'b', score: 1 }, { text: "想要證明自己在某個領域是頂尖的", value: 'c', score: 4 } ] }
+        ];
+
+        let currentStep = 0;
+        let userAnswers = {};
+        let stepHistory = [];
+
+        function startQuiz() { document.getElementById('start-screen').classList.add('hidden'); document.getElementById('quiz-container').classList.remove('hidden'); renderQuestion(); }
+        function renderQuestion() { const question = quizData[currentStep]; const area = document.getElementById('question-area'); let html = `<h2 class="text-2xl font-bold text-indigo-900 mb-8 text-center md:text-left">${question.question}</h2>`; if (question.type === 'multiple') { html += `<p class="text-sm text-indigo-500 mb-4 font-bold text-center md:text-left">【 此題可多選 】</p>`; if (question.id === 'subject_bias') { html += `<div class="grid grid-cols-2 gap-3">`; } } else { html += `<div class="space-y-1">`; } question.options.forEach((opt) => { const isSelected = isOptionSelected(question.id, opt.value); html += `<div class="option-box ${isSelected ? 'selected' : ''}" onclick="selectOption('${question.id}', '${opt.value}', ${question.type === 'multiple'})">${opt.text}</div>`; }); html += `</div>`; area.innerHTML = html; updateUI(); }
+        function isOptionSelected(qId, val) { if (!userAnswers[qId]) return false; if (Array.isArray(userAnswers[qId])) return userAnswers[qId].includes(val); return userAnswers[qId] === val; }
+        function selectOption(qId, val, isMultiple) { if (isMultiple) { if (!userAnswers[qId]) userAnswers[qId] = []; const index = userAnswers[qId].indexOf(val); if (index > -1) { userAnswers[qId].splice(index, 1); } else { if (val === 'none') { userAnswers[qId] = ['none']; } else { const noneIndex = userAnswers[qId].indexOf('none'); if (noneIndex > -1) userAnswers[qId].splice(noneIndex, 1); userAnswers[qId].push(val); } } } else { userAnswers[qId] = val; } renderQuestion(); }
+        function goNext() { const currentQ = quizData[currentStep]; if (!userAnswers[currentQ.id] || (Array.isArray(userAnswers[currentQ.id]) && userAnswers[currentQ.id].length === 0)) { alert("請先選擇一個選項喔！"); return; } stepHistory.push(currentStep); if (currentQ.id === 'identity_main') { if (userAnswers[currentQ.id] === 'special') { currentStep = 2; } else { currentStep++; } } else { currentStep++; } if (currentStep >= quizData.length) { showResult(); } else { renderQuestion(); } }
+        function goBack() { if (stepHistory.length > 0) { currentStep = stepHistory.pop(); renderQuestion(); } }
+        function updateUI() { document.getElementById('step-indicator').innerText = `步驟 ${currentStep + 1} / ${quizData.length}`; const progress = ((currentStep + 1) / quizData.length) * 100; document.getElementById('progress-fill').style.width = `${progress}%`; document.getElementById('percent-indicator').innerText = `${Math.round(progress)}%`; const prevBtn = document.getElementById('prev-btn'); if (stepHistory.length > 0) { prevBtn.classList.remove('hidden'); } else { prevBtn.classList.add('hidden'); } const nextBtn = document.getElementById('next-btn'); nextBtn.innerText = currentStep === quizData.length - 1 ? "查看結果" : "下一題"; }
+
+        // [重要修改] 新的 showResult 函數，包含圓形動畫邏輯
+        function showResult() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            // 計算分數邏輯保持不變 ...
+            let totalScore = 0; quizData.forEach(q => { const answer = userAnswers[q.id]; if (!answer) return; if (q.id === 'subject_bias') { if (answer.includes('none')) { totalScore += 2; } else { const count = answer.length; if (count === 1) totalScore += 15; else if (count === 2) totalScore += 12; else if (count === 3) totalScore += 8; else totalScore += 5; } } else if (Array.isArray(answer)) { answer.forEach(val => { const opt = q.options.find(o => o.value === val); if (opt) totalScore += opt.score; }); } else { const opt = q.options.find(o => o.value === answer); if (opt && opt.score) totalScore += opt.score; } }); let finalPercent = Math.min(Math.round(totalScore), 100);
+
+            const scoreText = document.getElementById('final-score-text');
+            const circularBar = document.getElementById('result-circular');
+            const desc = document.getElementById('result-description');
+
+            //動畫核心邏輯：從 0 跑動到 finalPercent
+            let currentProgress = 0;
+            const duration = 1200; // 動態總時間 (毫秒)
+            const stepTime = Math.max(duration / finalPercent, 10); // 計算每步時間，至少 10ms
+
+            const counter = setInterval(() => {
+                if (currentProgress >= finalPercent) {
+                    currentProgress = finalPercent;
+                    clearInterval(counter);
+                }
+                
+                // 更新數字
+                scoreText.innerText = `${currentProgress}%`;
+                // 更新 CSS 變數控制圓形進度 (從 0 conic-gradient 填滿到 finalPercent)
+                circularBar.style.setProperty('--progress-val', currentProgress);
+                
+                if (currentProgress >= finalPercent) return;
+                currentProgress++;
+            }, stepTime);
+
+            // 結果描述保持不變 ...
+            let message = ""; if (finalPercent >= 85) { message = "<strong>💎 天選之子：</strong><br>你具有極強的個人特色與頂尖背景，特殊選才幾乎是為你量身打造的！你的特定學科強項與經歷在特殊選才中非常具有競爭力，建議現在就開始整理作品集。"; } else if (finalPercent >= 60) { message = "<strong>🚀 深具潛力：</strong><br>你有明確的專長與經歷，適配度良好。雖然可能不是該領域的頂尖大神，但只要能好好敘述你的學習動機與獨特性，錄取機會相當高，是一條值得全力衝刺的管道。"; } else if (finalPercent >= 40) { message = "<strong>⚖️ 邊緣徘徊：</strong><br>你的特質介於一般生與特殊生之間。你的學科表現較為平均，缺乏顯著的「偏才」現象。建議加強特定領域的深度，或嘗試累積更具代表性的作品，同時也不要放棄學測準備。"; } else { message = "<strong>📚 一般管道更穩：</strong><br>根據測驗，你的特質傾向於全面均衡發展，這在一般管道（如個申、分科）是巨大的優勢。特殊選才追求的是「極端偏好」，目前的你更適合在傳統考試中脫穎而出。"; } desc.innerHTML = message;
+        }
+    </script>
+</body>
+</html>
