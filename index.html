@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    html {
+        /* 核心修復：強制瀏覽器預留滾動條空間，防止內容長短變化時畫面左右跳動 */
+        scrollbar-gutter: stable;
+    }
     <style>
         body {
             margin: 0;
@@ -34,6 +38,7 @@
             background-image: url('bg.png'); 
             /* 使用 fixed 確保圖片比例不會因為容器高度改變而重新計算 */
             background-attachment: fixed; 
+            transform: translateZ(0);    /* 強制硬體加速，增加渲染穩定度 */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -54,8 +59,9 @@
             padding: 2.5rem;
             border-radius: 1.5rem;
             /* 避免跳題時容器高度劇烈閃爍 */
-            min-height: 400px; 
+            min-height: 500px; 
             margin: 20px;
+            transition: min-height 0.3s ease; /* 讓題目長度切換時，框框高度變化較平滑 */
         }
 
         /* 保持原本選項框的設定... */
@@ -368,7 +374,8 @@
                 showResult();
             } else {
                 renderQuestion();
-                window.scrollTo(0, 0); // 切換題目後自動捲動到頂部，體驗較好
+                // --- 新增這行：切換題目後，讓畫面自動平滑捲動回最上方 ---
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
