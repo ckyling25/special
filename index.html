@@ -102,9 +102,59 @@
         .option-box:hover { border-color: #6366f1 !important; background-color: #f5f3ff; }
         .option-box.selected { border-color: #4f46e5 !important; background-color: #e0e7ff !important; box-shadow: 0 0 0 1px #4f46e5; }
         
-        /* 補充進度條樣式，確保顯示正常 */
-        .progress-bar { height: 10px; background-color: #e2e8f0; border-radius: 5px; overflow: hidden; }
-        .progress-fill { height: 100%; background-color: #4f46e5; transition: width 0.3s ease; }
+        /* 圓形進度條容器 */
+        .circle-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem; /* 置中並與下方保持距離 */
+        }
+        
+        /* SVG 圓圈基礎 */
+        .circle-svg {
+            transform: rotate(-90deg); /* 讓起點從 12 點鐘方向開始 */
+        }
+        
+        .circle-bg {
+            fill: none;
+            stroke: #e2e8f0; /* 未填充的灰色 */
+            stroke-width: 8;
+        }
+        
+        .circle-progress {
+            fill: none;
+            stroke: #4f46e5; /* 進度條紫色 */
+            stroke-width: 8;
+            stroke-linecap: round; /* 圓角結尾 */
+            stroke-dasharray: 565.48; /* 圓周長 (2 * π * 90) */
+            stroke-dashoffset: 565.48; /* 初始偏移（隱藏） */
+            transition: stroke-dashoffset 1.5s ease-out; /* 動畫效果 */
+        }
+        
+        /* 圓圈中央的文字區塊 */
+        .circle-text-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        #final-score-text {
+            display: block;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #4f46e5;
+            line-height: 1;
+        }
+        
+        .score-label {
+            display: block;
+            font-size: 1rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
         .hidden { display: none; }
     </style>
 </head>
@@ -153,15 +203,14 @@
 
             <div id="result-screen" class="hidden text-center center-content">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800">測驗結果分析</h2>
-                <div class="w-full mb-8">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                            總體適配度
-                        </span>
-                        <span id="final-score-text" class="text-5xl font-bold text-blue-600">0%</span>
-                    </div>
-                    <div class="overflow-hidden h-4 rounded bg-blue-100">
-                        <div id="final-progress-bar" style="width:0%" class="h-full bg-blue-500 transition-all duration-1000 ease-out"></div>
+                <div class="circle-container">
+                    <svg class="circle-svg" width="200" height="200">
+                        <circle class="circle-bg" cx="100" cy="100" r="90"></circle>
+                        <circle id="circle-progress-bar" class="circle-progress" cx="100" cy="100" r="90"></circle>
+                    </svg>
+                    <div class="circle-text-box">
+                        <span id="final-score-text">0%</span>
+                        <span class="score-label">總體適配度</span>
                     </div>
                 </div>
                 
@@ -436,13 +485,13 @@
         function showResult() {
             document.getElementById('quiz-container').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
-
+        
             let totalScore = 0;
             
             quizData.forEach(q => {
                 const answer = userAnswers[q.id];
                 if (!answer) return;
-
+        
                 if (q.id === 'subject_bias') {
                     if (answer.includes('none')) {
                         totalScore += 2;
@@ -463,18 +512,46 @@
                     if (opt && opt.score) totalScore += opt.score;
                 }
             });
-
+        
             let finalPercent = Math.min(Math.round(totalScore), 100);
-
+        
+            // --- 取得 DOM 元件 ---
             const scoreDisplay = document.getElementById('final-score-text');
-            const progressBar = document.getElementById('final-progress-bar');
+            const circleBar = document.getElementById('circle-progress-bar');
             const desc = document.getElementById('result-description');
-
+        
+            // --- 圓形動畫與數字跳動邏輯 ---
+            // 計算圓形周長與偏移量 (半徑 85，周長約 534)
+            const circumference = 2 * Math.PI * 85; 
+            const offset = circumference - (finalPercent / 100) * circumference;
+            
             setTimeout(() => {
-                scoreDisplay.innerText = `${finalPercent}%`;
-                progressBar.style.width = `${finalPercent}%`;
-            }, 100);
-
+                // 1. 執行圓弧進度動畫
+                if (circleBar) {
+                    circleBar.style.strokeDashoffset = offset;
+                }
+                
+                // 2. 執行數字跑動動畫 (0% -> 目標%)
+                let startTime = null;
+                const duration = 1500; // 動畫持續 1.5 秒
+        
+                function updateNumber(currentTime) {
+                    if (!startTime) startTime = currentTime;
+                    const elapsedTime = currentTime - startTime;
+                    const progress = Math.min(elapsedTime / duration, 1);
+                    
+                    // 計算當前數字
+                    const currentCount = Math.floor(progress * finalPercent);
+                    scoreDisplay.innerText = `${currentCount}%`;
+        
+                    if (progress < 1) {
+                        requestAnimationFrame(updateNumber);
+                    }
+                }
+                requestAnimationFrame(updateNumber);
+            }, 300);
+        
+            // --- 設定結果描述文字 ---
             let message = "";
             if (finalPercent >= 85) {
                 message = "<strong>天選之子：</strong> 你具有極強的個人特色與頂尖背景，特殊選才幾乎是為你量身打造的！你的特定學科強項與經歷在特殊選才中非常具有競爭力。";
@@ -485,7 +562,7 @@
             } else {
                 message = "<strong>一般管道更穩：</strong> 根據測驗，你的特質傾向於全面均衡發展，這在一般管道（如個申、分科）是巨大的優勢。特殊選才追求的是「極端偏好」，目前的你更適合在傳統考試中脫穎而出。";
             }
-
+        
             desc.innerHTML = message;
         }
     </script>
