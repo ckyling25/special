@@ -55,14 +55,35 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
             z-index: 10;
             width: 95%; /* 增加寬度彈性 */
-            max-width: 48rem; 
-            padding: 2.5rem;
+            
+            /* 1. 修改：將寬度從 48rem 縮小到 40rem，讓框框更緊湊 (約 640px) */
+            max-width: 40rem;  
+        
+            /* 2. 修改：將原本的 padding 2.5rem 改為 0，因為間距現在要由內層 div 控制 */
+            padding: 0 !important; 
+        
             border-radius: 1.5rem;
             /* 避免跳題時容器高度劇烈閃爍 */
             height: auto;
             min-height: auto;
             margin: 20px;
             transition: min-height 0.3s ease; /* 讓題目長度切換時，框框高度變化較平滑 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 確保底欄的灰色背景不會超出白框的圓角 */
+        }
+        .disclaimer-bar {
+            background-color: #f8fafc; /* 淺灰色背景 */
+            border-top: 1px solid #e2e8f0; /* 上方一條淡淡的分隔線 */
+            padding: 0.75rem 1rem; /* 上下左右的內距 */
+            text-align: center;
+            width: 100%;
+        }
+        
+        .disclaimer-text {
+            color: #64748b; /* 中灰色文字 */
+            font-size: 0.75rem; /* 小字體 */
+            margin: 0;
         }
 
         /* 保持原本選項框的設定... */
@@ -88,77 +109,76 @@
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
-    <div class="max-w-2xl w-full bg-white p-6 md:p-10 rounded-2xl shadow-xl main-container">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl main-container">
         
-        <!-- 封面開始畫面 -->
-        <div id="start-screen" class="center-content">
-            <h1 class="text-center text-indigo-900 mb-2 font-bold" style="font-family: 'Noto Sans TC', sans-serif;">
-                <span class="text-3xl md:text-5xl block mb-2">你適合特殊選才嗎?</span>
-                <span class="text-lg md:text-2xl block opacity-80 font-normal">特殊選才適配度模擬測驗</span>
-            </h1>
-
-            <p class="text-gray-600 mt-8 mb-10 text-center max-w-2xl mx-auto leading-9">
-                相較於繁星、個人申請及分科測驗，特殊選才不看學測，<br>
-                適合具有「偏才、奇才、逆境向上」特質學生所申請的管道。<br>
-                透過本模擬器，評估你目前的狀態是否適合嘗試這項入學管道。
-            </p>
-    
-            <button onclick="startQuiz()" class="w-full max-w-sm bg-indigo-600 text-white 
-                py-4 rounded-lg font-bold text-xl hover:bg-indigo-700 transition-colors mx-auto block">
-                開始測驗!
-            </button>
-        </div>
-
-        <!-- 測驗內容畫面 -->
-        <div id="quiz-container" class="hidden">
-            <div class="mb-6">
-                <div class="flex justify-between items-center mb-2">
-                    <span id="step-indicator" class="text-sm font-medium text-blue-600">題目 1 / 10</span>
-                    <span id="percent-indicator" class="text-sm font-medium text-gray-400">0%</span>
-                </div>
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill" style="width: 10%;"></div>
-                </div>
-            </div>
-
-            <div id="question-area">
-                <!-- 題目會動態插入於此 -->
-            </div>
-
-            <div class="mt-8 flex justify-between gap-4">
-                <button id="prev-btn" onclick="goBack()" class="px-6 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 hidden">回上一題</button>
-                <button id="next-btn" onclick="goNext()" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ml-auto">下一題</button>
-            </div>
-        </div>
-
-        <!-- 結果畫面 -->
-        <div id="result-screen" class="hidden text-center center-content">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">測驗結果分析</h2>
-            <div class="w-full mb-8">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                        總體適配度
-                    </span>
-                    <span id="final-score-text" class="text-5xl font-bold text-blue-600">0%</span>
-                </div>
-                <div class="overflow-hidden h-4 rounded bg-blue-100">
-                    <div id="final-progress-bar" style="width:0%" class="h-full bg-blue-500 transition-all duration-1000 ease-out"></div>
-                </div>
-            </div>
+        <div style="padding: 2.5rem 2rem; flex-grow: 1;">
             
-            <div id="result-description" class="p-6 bg-blue-50 border border-blue-100 rounded-lg text-left text-gray-700 leading-relaxed">
-                <!-- 結果描述會插入於此 -->
-            </div>
-            <div class="mt-8 px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-center">
-                <p class="text-xs md:text-sm text-gray-500 leading-relaxed">
-                    <span class="font-bold text-orange-500">⚠️ 備註說明：</span><br>
-                    本測驗結果僅供個人參考與娛樂用途，建議詳閱各校系簡章並諮詢專業老師。
+            <div id="start-screen" class="center-content">
+                <h1 class="text-center text-indigo-900 mb-2 font-bold" style="font-family: 'Noto Sans TC', sans-serif;">
+                    <span class="text-3xl md:text-5xl block mb-2">你適合特殊選才嗎?</span>
+                    <span class="text-lg md:text-2xl block opacity-80 font-normal">特殊選才適配度模擬測驗</span>
+                </h1>
+
+                <p class="text-gray-600 mt-8 mb-10 text-center max-w-2xl mx-auto leading-9">
+                    相較於繁星、個人申請及分科測驗，特殊選才不看學測，<br>
+                    適合具有「偏才、奇才、逆境向上」特質學生所申請的管道。<br>
+                    透過本模擬器，評估你目前的狀態是否適合嘗試這項入學管道。
                 </p>
+        
+                <button onclick="startQuiz()" class="w-full max-w-sm bg-indigo-600 text-white 
+                    py-4 rounded-lg font-bold text-xl hover:bg-indigo-700 transition-colors mx-auto block">
+                    開始測驗!
+                </button>
             </div>
-            <button onclick="location.reload()" class="mt-10 w-full max-w-sm border border-blue-600 text-blue-600 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">
-                重新測驗
-            </button>
+
+            <div id="quiz-container" class="hidden">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="step-indicator" class="text-sm font-medium text-blue-600">題目 1 / 10</span>
+                        <span id="percent-indicator" class="text-sm font-medium text-gray-400">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 10%;"></div>
+                    </div>
+                </div>
+
+                <div id="question-area">
+                    </div>
+
+                <div class="mt-8 flex justify-between gap-4">
+                    <button id="prev-btn" onclick="goBack()" class="px-6 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 hidden">回上一題</button>
+                    <button id="next-btn" onclick="goNext()" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ml-auto">下一題</button>
+                </div>
+            </div>
+
+            <div id="result-screen" class="hidden text-center center-content">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">測驗結果分析</h2>
+                <div class="w-full mb-8">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+                            總體適配度
+                        </span>
+                        <span id="final-score-text" class="text-5xl font-bold text-blue-600">0%</span>
+                    </div>
+                    <div class="overflow-hidden h-4 rounded bg-blue-100">
+                        <div id="final-progress-bar" style="width:0%" class="h-full bg-blue-500 transition-all duration-1000 ease-out"></div>
+                    </div>
+                </div>
+                
+                <div id="result-description" class="p-6 bg-blue-50 border border-blue-100 rounded-lg text-left text-gray-700 leading-relaxed">
+                    </div>
+                
+                <button onclick="location.reload()" class="mt-10 w-full max-w-sm border border-blue-600 text-blue-600 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">
+                    重新測驗
+                </button>
+            </div>
+
+        </div> <div class="disclaimer-bar">
+            <p class="disclaimer-text">
+                ⚠️ 備註說明：本測驗結果僅供個人參考與娛樂用途，建議詳閱各校系簡章並諮詢專業老師。
+            </p>
         </div>
+
     </div>
 
     <script>
