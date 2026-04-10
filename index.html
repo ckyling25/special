@@ -420,36 +420,31 @@
 
         function goNext() {
             const currentQ = quizData[currentStep];
-    
-            // --- [新增：防呆驗證] ---
-            // 檢查 userAnswers 裡是否有目前這題的資料
+        
+            // --- [防呆驗證] ---
             const answer = userAnswers[currentQ.id];
-            
-            // 如果沒選 (null/undefined) 或者 多選題陣列長度為 0
             if (!answer || (Array.isArray(answer) && answer.length === 0)) {
                 alert("⚠️ 請先選擇一個選項再繼續喔！");
-                return; // 直接中斷函數，不執行後面的切換題目邏輯
+                return; 
             }
-            // -----------------------
         
             stepHistory.push(currentStep);
         
-            // 邏輯判斷：如果是身分別跳題邏輯
-            if (currentQ.id === 'identity_main') {
-                if (userAnswers[currentQ.id] === 'special') {
-                    currentStep = 2; 
-                } else {
-                    currentStep++;
-                }
+            // --- [修改重點：跳題邏輯] ---
+            if (currentQ.id === 'identity_main' && userAnswers[currentQ.id] === 'special') {
+                // 如果是體制外，直接跳到索引 3 (第 4 題：學科強項)
+                // 同時跳過 1-1 (就學階段) 與 2 (在校成績)
+                currentStep = 3; 
             } else {
+                // 其他情況（體制內或後續題目）則循序前進
                 currentStep++;
             }
+            // -----------------------
         
             if (currentStep >= quizData.length) {
                 showResult();
             } else {
                 renderQuestion();
-                // --- 新增這行：切換題目後，讓畫面自動平滑捲動回最上方 ---
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
